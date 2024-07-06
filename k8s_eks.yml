@@ -1,0 +1,261 @@
+What is Kubernetes? Why organizations are using it?
+Kubernetes is an open-source container orchestration engine for automating deployment, scaling and management of containerized applications.
+
+A kubernetes cluster consists of a set of worker machines called nodes that run containerized applications. The control plane manages the worker nodes and the pods in cluster.
+
+What are the components of the master node (aka control plane)?
+-->kube API Server  	    - It exposes the Kubernetes API. All cluster components communicate through it
+-->kube Scheduler   	    - It watches for newly created pods with no assigned node, and selects a node for them to run on.
+-->kube Controller Manager  - cluster maintenance like replications, node failures, etc.
+-->etcd 	            - stores cluster configuration in key-value store
+-->Cloud Controller Manager - lets you link your cluster into your cloud provider's API
+
+What are the components of a worker node (aka data plane)?
+-->Kubelet           - an agent responsible for node communication with the master. It makes sure container are running in Pod.
+-->Kube-proxy        - Implements k8s service concept and load balancing traffic between app components 
+-->Container runtime - the engine runs the containers (Podman, Docker)
+
+What are some of Kubernetes features?
+->Self-Healing: Kubernetes uses health checks to monitor containers and run certain actions upon failure or other type of events, like restarting the container
+->Load Balancing: Kubernetes can split and/or balance requests to applications running in the cluster, based on the state of the Pods running the application
+->Operators: Kubernetes packaged applications that can use the API of the cluster to update its state and trigger actions based on events and application state changes
+->Automated Rollout: Gradual updates roll out to applications and support in roll back in case anything goes wrong
+->Scaling: Scaling horizontally (down and up) based on different state parameters and custom defined criteria
+->Secrets: you have a mechanism for storing user names, passwords and service endpoints in a private way, where not everyone using the cluster are able to view it
+
+What Kubernetes objects are there?
+Pod
+Service
+ReplicaSet
+DaemonSet
+Namespace
+ConfigMap
+
+What fields are mandatory with any Kubernetes object?
+->metadata, kind and apiVersion
+
+What Kubernetes objects do you usually use when deploying applications in Kubernetes?
+->Deployment - creates the Pods () and watches them
+->Service: route traffic to Pods internally
+->Ingress: route traffic from outside the cluster
+
+Describe shortly and in high-level, what happens when you run kubectl get nodes
+-->Your user is getting authenticated
+-->Request is validated by the kube-apiserver
+-->Data is retrieved from etcd
+
+Explain what is a Pod?
+-->A Pod is a group of one or more containers, with shared storage and network resources, and a specification for how to run the containers.
+-->Pods are the smallest deployable units of computing that you can create and manage in Kubernetes.
+
+How many containers can a pod contain?
+-->A pod can contain multiple containers but in most cases it would probably be one container per pod.
+-->In some scenarios, you can have additional helper container where you might want to perform logging or some other operation that is executed by another container running with your app container in the same Pod.
+
+What happens when you run a Pod with kubectl?
+Kubectl sends a request to the API server (kube-apiserver) to create the Pod
+In the the process the user gets authenticated and the request is being validated.
+etcd is being updated with the data
+The Scheduler detects that there is an unassigned Pod by monitoring the API server (kube-apiserver)
+The Scheduler chooses a node to assign the Pod to
+etcd is being updated with the information
+The Scheduler updates the API server about which node it chose
+Kubelet (which also monitors the API server) notices there is a Pod assigned to the same node on which it runs and that Pod isn't running
+Kubelet sends request to the container engine (e.g. Docker) to create and run the containers
+An update is sent by Kubelet to the API server (notifying it that the Pod is running)
+etcd is being updated by the API server again
+
+
+A DaemonSet ensures that all (or some) Nodes run a copy of a Pod.
+Persistent Volumes allow us to save data so basically they provide storage that doesn't depend on the pod lifecycle.
+Secrets let you store and manage sensitive information (passwords, ssh keys, etc.)
+	kubectl create secret generic some-secret --from-literal=password='donttellmypassword'
+
+A kubeconfig file is a file used to configure access to Kubernetes when used in conjunction with the kubectl commandline tool (or other clients). Use kubeconfig files to organize information about clusters, users, namespaces, and authentication mechanisms
+
+What is Ingress?
+From Kubernetes docs: "Ingress exposes HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the Ingress resource."
+
+What is Ingress Controller?
+An implementation for Ingress. It's basically another pod (or set of pods) that does evaluates and processes Ingress rules and this it manages all the redirections.
+There are multiple Ingress Controller implementations (the one from Kubernetes is Kubernetes Nginx Ingress Controller).
+
+What are some use cases for using Ingress?
+Multiple sub-domains (multiple host entries, each with its own service)
+One domain with multiple services (multiple paths where each one is mapped to a different service/application)
+
+Helm
+What is Helm?
+
+Package manager for Kubernetes. Basically the ability to package YAML files and distribute them to other users and apply them in the cluster(s).
+
+As a concept it's quite common and can be found in many platforms and services. Think for example on package managers in operating systems. If you use Fedora/RHEL that would be dnf. If you use Ubuntu then, apt. If you don't use Linux, then a different question should be asked and it's why? but that's another topic :)
+
+https://github.com/bregman-arie/devops-exercises/tree/master/topics/kubernetes#helm
+
+
+
+create a new chart with the given name
+helm create NAME [flags]
+
+For example, 'helm create foo' will create a directory structure that looks something like this:
+
+foo/
+├── .helmignore   # Contains patterns to ignore when packaging Helm charts.
+├── Chart.yaml    # Information about your chart
+├── values.yaml   # The default values for your templates
+├── charts/       # Charts that this chart depends on
+└── templates/    # The template files
+    └── tests/    # The test files
+
++++++++++++++++++++++++++++++++++++++++++==========
+https://github.com/stacksimplify/aws-eks-kubernetes-masterclass
+https://github.com/bregman-arie/devops-exercises/tree/master/topics/kubernetes#helm
+
+to create a file from command
+kubectl create deployment nginx --image=nginx --dry-run=client -o yaml > nginx-deployment.yaml
+
+Taints and tolerations work together to ensure that pods are not scheduled onto inappropriate nodes. One or more taints are applied to a node; this marks that the node should not accept any pods that do not tolerate the taints.
+taints are set on nodes and tolerations are set on pods.
+
+resource and limits kubernetes
+Kubernetes requests and limits define the amount of resouces such as CPU and memory that  containers in pod can consume
+CPU and memory are collectively referred to as compute resources, or resources
+
+
+Node affinity is a property of Pods that attracts them to a set of nodes. 
+Below are different methods Kubernetes schedules specific Pods
+	nodeSelector field matching against node labels
+      Affinity and anti-affinity
+      nodeName field
+    Pod topology spread constraints
+
+
+=====================****************************======================
+
+https://github.com/stacksimplify/aws-eks-kubernetes-masterclass
+https://github.com/bregman-arie/devops-exercises/tree/master/topics/kubernetes#helm
+https://github.com/antonputra/tutorials/tree/main/lessons/102   --eks with terraform
+
+git clone https://github.com/kodekloudhub/kubernetes-metrics-server.git
+
+eksctl create cluster --name=eksdemo1 \
+                      --region=us-east-1 \
+                      --zones=us-east-1a,us-east-1b \
+                      --without-nodegroup 
+
+eksctl get cluster  
+eksctl utils associate-iam-oidc-provider \
+    --region us-east-1 \
+    --cluster eksdemo1 \
+    --approve
+
+eksctl create nodegroup --cluster=eksdemo1 \
+                        --region=us-east-1 \
+                        --name=eksdemo1-ng-private1 \
+                        --node-type=t3.medium \
+                        --nodes-min=2 \
+                        --nodes-max=4 \
+                        --node-volume-size=20 \
+                        --ssh-access \
+                        --ssh-public-key=awseks \
+                        --managed \
+                        --asg-access \
+                        --external-dns-access \
+                        --full-ecr-access \
+                        --appmesh-access \
+                        --alb-ingress-access \
+                        --node-private-networking
+
+kubectl config view --minify
+
+
+to create a file from command
+kubectl create deployment nginx --image=nginx --dry-run=client -o yaml > nginx-deployment.yaml
+
+Taints and tolerations work together to ensure that pods are not scheduled onto inappropriate nodes. One or more taints are applied to a node; this marks that the node should not accept any pods that do not tolerate the taints.
+taints are set on nodes and tolerations are set on pods.
+
+resource and limits kubernetes
+Kubernetes requests and limits define the amount of resouces such as CPU and memory that  containers in pod can consume
+CPU and memory are collectively referred to as compute resources, or resources
+
+
+Node affinity is a property of Pods that attracts them to a set of nodes. 
+Below are different methods Kubernetes schedules specific Pods
+	nodeSelector field matching against node labels
+      Affinity and anti-affinity
+      nodeName field
+    Pod topology spread constraints
+
+Rolling update is default deployment strategy of K8s.
+kubectl rollout status deployment/my-deploy
+kubectl rollout history
+kubectl rollout undo
+
+Configure Applications
+Configuring applications comprises of understanding the following concepts:
+Configuring Command and Arguments on applications
+Configuring Environment Variables
+Configuring Secrets
+
+Define an environment variable for a container
+To set environment variables, include the env or envFrom field in the configuration file
+ --> env
+allows you to set environment variables for a container, specifying a value directly for each variable that you name.
+--> envFrom
+allows you to set environment variables for a container by referencing either a ConfigMap or a Secret.
+
+“Role” will grant access to only one specific namespace, while a “ClusterRole” can be used in all namespaces in the cluster.
+If you want to define a role within a namespace, use a Role; if you want to define a role cluster-wide, use a ClusterRole.
+The role defines what actions (aka “verbs”) can be taken against what kinds of “resources.” The RoleBinding is what maps users to that role. 
+
+In the Kubernetes cluster, any processes or applications in the container which resides within the pod can access the cluster by getting authenticated by the API server, using a service account. A service account provides  a unique identity for system components and application pods.
+Every Kubernetes namespace contains at least one ServiceAccount: the default ServiceAccount for that namespace, named default
+
+CRI (Container Runtime Interface) CNI (Cluster Network Interface) CSI (Container Storage Interface) 
+
+A PersistentVolume (PV) is a piece of storage in the cluster that has been provisioned by an administrator or dynamically provisioned using Storage Classes. 
+There are two ways PVs may be provisioned: statically (by administrator) or dynamically (by Storage class).
+
+PersistentVolumeClaim (PVC) is a request for storage from a user.
+
+A StorageClass provides a way for administrators to describe the classes of storage they offer.
+Each StorageClass contains the fields provisioner, parameters, and reclaimPolicy, which are used when a PersistentVolume belonging to the class needs to be dynamically provisioned to satisfy a PersistentVolumeClaim (PVC)
+Sidecar containers are the secondary containers that run along with the main application container within the same Pod. These containers are used to enhance or to extend the functionality of the primary app container by providing additional services, or functionality such as logging, monitoring, security, or data synchronization.
+
+Init containers are exactly like regular containers but they run before the app containers are started. 
+ ->Init containers always run to completion.
+ ->Each init container must complete successfully before the next one starts.
+
+Liveness, Readiness and Startup Probes
+
+Liveness: making sure healthy to restart
+The kubelet uses liveness probes to know when to restart a container.
+   -- > For example, liveness probes could identify a deadlock situations, where an application is running, but unable to make progress. Restarting a container in such a state can help to make the application more available.
+
+Readiness:  making sure container is ready to start accepting traffic.
+The kubelet uses readiness probes to know when a container is ready to start accepting traffic. A Pod is considered ready when all of its containers are ready. One use of this signal is to control which Pods are used as backends for Services. When a Pod is not ready, it is removed from Service load balancers.
+
+Startup: making sure container application has started
+The kubelet uses startup probes to know when a container application has started.This can be used to adopt liveness checks on slow starting containers, avoiding them getting killed by the kubelet before they are up and running.
+
+The Amazon Elastic Block Store Container Storage Interface (EBS CSI) Driver provides a CSI interface used by Container Orchestrators(K8s) to manage the lifecycle of Amazon EBS volumes.
+--> Automatically create EBS volumes and associated PersistentVolumes (PV) from PersistentVolumeClaims) (PVC). Parameters can be passed via a StorageClass for fine-grained control over volume
+
+====Troubleshooting k8s====
+
+1)ImagepullBackoff
+  -->Invalid image
+  -->non-existing image
+  --> private (secured) image without imagePullSecret
+
+errImagePull ---wait and try multiple times ---> ImagepullBackoff
+
+kubectl describe pod
+# List Events sorted by timestamp
+kubectl get events --sort-by=.metadata.creationTimestamp
+
+# List all warning events
+kubectl events --types=Warning
+

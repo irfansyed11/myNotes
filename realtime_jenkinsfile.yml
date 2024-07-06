@@ -1,0 +1,235 @@
+This is where we are calling jenkins shared library:
+@Library('orgPipelineDeclarative')
+=================================================================================================
+here is the Jenkinsfile:
+
+def serviceName = 'app-bodyconfig'
+def smokeTestName = "${serviceName}_smoke-test"
+def functionalTestName = "${serviceName}_functional-test"
+def performanceTestName = "${serviceName}_performance-test"
+def imageName = "app-bodyconfig"
+def swaggerFilePattern = "${serviceName}.yaml"
+def ephemeralTag = "eph-${BUILD_TIMESTAMP_EPHEMERAL}"
+
+@Library('orgPipelineDeclarative') _
+
+pipeline {
+
+    agent { label 'docker' }
+
+    environment {
+        SERVICE_NAME = "${serviceName}"
+        BUILD_NAME = "${BRANCH_NAME}-${BUILD_ID}".replaceAll("[/_]", "-").toLowerCase()
+        SHORTENED_BUILD_NAME = "${BUILD_NAME}".reverse().take(8).reverse()
+        INSTANCE_NAME = "${ephemeralTag}-${SHORTENED_BUILD_NAME}"
+        HELPER_IMAGE = "docker.org.com/k8s-docker-helper:latest"
+        INCEPTION_AWS = credentials('inception-k8s-aws-credentials')
+        AWS_ACCESS_KEY_ID = "${INCEPTION_AWS_USR}"
+        AWS_SECRET_ACCESS_KEY = "${INCEPTION_AWS_PSW}"
+        GH_TOKEN = credentials('github-orgbot-user')
+        GH_CREDENTIAL = "${GH_TOKEN_PSW}"
+        AWS_REGION = "us-east-1"
+        ORG_OWNER = "developer@org.com"
+        ORG_APP_VERSION = "${BUILD_TIMESTAMP_DOCKER}"
+        SONAR_TOKEN           = credentials('org-sonar-api-token')
+        SONAR_OPTS            = "-Dsonar.login=${SONAR_TOKEN} -Dsonar.userHome=${WORKSPACE}"
+    }
+
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+        timestamps()
+        buildDiscarder(logRotator(daysToKeepStr: '90', numToKeepStr: '10'))
+        ansiColor('xterm')
+    }
+
+    stages {
+        stage('Build') {
+            agent {
+                dockerfile {
+                    label 'docker'
+                    dir 'builder'
+                    registryUrl 'https://docker.org.com'
+                    registryCredentialsId 'docker-registry'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh "./gradlew clean buildAndPublish"
+                junit '**/build/test-results/test/*.xml'
+                recordIssues enabledForFailure: true, tool: spotBugs(pattern: "**/build/reports/spotbugs/main.xml" )
+                step([$class               : 'JacocoPublisher',
+                      classPattern         : 'build/classes/java/main',
+                      exclusionPattern     : '**/Application*.class,**/*Configuration.class,**/*Config.class,**/Dev*.class,com/app/bodyconfig/model/**/*',
+                      minimumBranchCoverage: '85',
+                      changeBuildStatus    : true
+                ])
+                deptrackUpload projectName: imageName, projectVersion: '1.0', artifact: 'build/reports/bom.xml', artifactType: 'bom', synchronous: true
+
+                script {
+                    if (env.BRANCH_NAME == 'main') {
+                        openApiSchema([fileDir: "build/generated", filePattern: swaggerFilePattern])
+                    }
+                }
+            }
+        }
+        // only push artifacts after all test/coverage/dependency checks done
+        stage('Docker') {
+            steps {
+                dir('.') {
+                    buildDockerImage imageName
+                }
+                dir('smoke-test') {
+                    buildDockerImage smokeTestName
+                }
+                dir('functional-test') {
+                     buildDockerImage functionalTestName
+                }
+
+                dir('performance-test') {
+                    buildDockerImage performanceTestName
+                }
+            }
+        }
+        stage('Functional') {
+            environment {
+               ORG_DATACENTER = "eks_cluster-dev"
+            }
+            steps {
+                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                    sh './deploy.sh tf apply'
+                    runTest testType: 'smoke'
+                    runTest testType: 'functional'
+                }
+            }
+        }
+        stage('Sonar') {
+            agent {
+                dockerfile {
+                    label 'dockerized'
+                    dir 'builder'
+                    registryUrl 'https://docker.org.com'
+                    registryCredentialsId 'docker-registry'
+                    reuseNode true
+                }
+            }
+            steps {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    sh "./gradlew ${SONAR_OPTS} sonar"
+                    sonarqubeToSplunk job_name: env.JOB_NAME
+                }
+            }
+        }
+        stage('Robust') {
+            steps {
+                runTest testType: 'performance'
+            }
+            post {
+                always {
+                    sh './deploy.sh tf destroy'
+                }
+            }
+        }
+    }
+    post {
+        success {
+            script {
+                if (env.BRANCH_NAME == 'main') {
+                    pushTagToGit()
+                }
+            }
+        }
+        fixed {
+            script {
+                if (env.BRANCH_NAME == 'main') {
+                    notifySlack('app-k8s-builds')
+                }
+            }
+        }
+        unsuccessful {
+            script {
+                if (env.BRANCH_NAME == 'main') {
+                    notifySlack('app-k8s-builds')
+                }
+            }
+        }
+        always {
+             archiveArtifacts artifacts: '**/build/testlogs/functional-test/*', fingerprint: true
+             allure includeProperties:false,
+             jdk: '',
+             properties:[],
+             reportBuildPolicy: 'ALWAYS',
+             results: [[path: '**/build/testlogs/functional-test/allure-results']]
+        }
+        cleanup {
+            cleanWs()
+        }
+    }
+}
+=================================================================================================
+
+Here is the sample Dockerfile:
+
+FROM eclipse-temurin:17-jdk-alpine
+MAINTAINER developer <devops@org.com>
+
+RUN apk update && \
+    apk add curl
+
+CMD [ "java","-server","-jar","/opt/app-bodyconfig.jar"]
+
+COPY build/generated/app-bodyconfig.yaml /opt/etc/
+COPY build/libs/app-bodyconfig.jar /opt/app-bodyconfig.jar
+COPY build/buildinfo /opt/etc/buildinfo
+
+=================================================================================================
+And this is another Dockerfile to prepare the JAVA Env to build the java code in docker container:
+
+cat builder/Dockerfile
+FROM docker.tivo.com/openjdk-docker:17
+=================================================================================================
+here is the deploy script:
+
+#!/bin/bash
+
+# set these variables with appropriate defaults for your service
+export SERVICE_NAME=${SERVICE_NAME:-aps-federated-bodyconfig}
+export ORG_APP_VERSION=${ORG_APP_VERSION:-0.0.1}
+export INSTANCE_NAME=${INSTANCE_NAME:-$USER}
+export ORG_OWNER=${ORG_OWNER:-$USER@org.com}
+export ORG_DATACENTER=${ORG_DATACENTER:-eks_cluster-dev}
+export AWS_REGION=${AWS_REGION:-us-east-1}
+
+# set the docker helper image name
+export HELPER_IMAGE=${HELPER_IMAGE:-docker.org.com/k8s-docker-helper}
+
+# boilerplate below
+mkdir -p build/helper
+docker pull $HELPER_IMAGE 1>/dev/null
+docker run --rm $HELPER_IMAGE get-run-script > build/helper/run.sh
+sh build/helper/run.sh "$*"
+=================================================================================================
+Which create another script called build/helper/run.sh using docker container and expect run time positional parameters from deploy.sh script.
+=================================================================================================
+Here is the project directory structure:
+
+CODEOWNERS
+Dockerfile
+Jenkinsfile
+README.md
+build.gradle
+build.sh
+builder
+deploy.sh
+functional-test
+gradle
+gradle.properties
+gradlew
+gradlew.bat
+lombok.config
+performance-test
+schema
+settings.gradle
+smoke-test
+src
+terraform
+=================================================================================================

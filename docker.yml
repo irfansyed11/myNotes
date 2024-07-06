@@ -1,0 +1,173 @@
+A container: is a bundle of Application and all its dependencies so the application runs quickly and reliably from one computing environment to another. 
+
+A Docker container image is a lightweight, standalone, executable package of software that includes everything needed to run an application: code, runtime, system tools, system libraries and settings.
+
+Containers vs Virtual Machine:
+Containers and virtual machines are both technologies used to isolate applications and their dependencies, but they have some key differences:
+1. Resource Utilization: Containers share the host operating system kernel, making them lighter and faster than VMs. VMs have a full-fledged OS and hypervisor, making them more resource-intensive.
+
+2. Portability: Containers are designed to be portable and can run on any system with a compatible host operating system. VMs are less portable as they need a compatible hypervisor to run.
+
+3. Security: VMs provide a higher level of security as each VM has its own operating system and can be isolated from the host and other VMs. Containers provide less isolation, as they share the host operating system.
+
+Why are containers light weight:
+Containers are lightweight because they use a technology called containerization, which allows them to share the host operating system's kernel and libraries, while still providing isolation for the application and its dependencies. Containers do not need to include a full operating system. Additionally, Docker containers are designed to be minimal, only including what is necessary for the application to run, further reducing their size.
+
+Docker is a containerization platform that provides easy way to containerize your applications, which means, using Docker you can build container images, run the images to create containers and also push these containers to container regestries such as DockerHub.
+By containerizing your applications, Docker enables you to seperate your applications from infrastructure so that you can develop, deliver and run applications  quickly.
+
+Docker LifeCycle:
+There are three important things,
+docker build -> builds docker images from Dockerfile
+docker run -> runs container from docker images
+docker push -> push the container image to public/private regestries to share the docker images.
+
+Docker registries:
+A Docker registry stores Docker images. Docker Hub is a public registry that anyone can use, and Docker is configured to look for images on Docker Hub by default. You can even run your own private registry.
+
+Dockerfile:
+Dockerfile is a file where you provide the steps to build your Docker Image.
+
+Images
+An image is a read-only template with instructions for creating a Docker container. Often, an image is based on another image, with some additional customization. For example, you may build an image which is based on the ubuntu image, but installs the Apache web server and your application, as well as the configuration details needed to make your application run.
+
+
+Docker commands:
+docker version
+docker login -u username -p password
+docker logout
+docker pull irfansyed11/dockerintro-springboot-helloworld-rest-api:1.0.0-RELEASE
+docker run --name app1 -p 80:8080(cont_port) -d irfansyed11/dockerintro-springboot-helloworld-rest-api:1.0.0-RELEASE
+docker ps
+docker ps -a
+docker ps -a -q
+docker exec -it <container-name> /bin/sh
+docker stop <container-name>
+docker start  <container-name>
+docker stop <container-name> 
+docker rm <container-name>
+docker images
+docker rmi  <image-id>
+docker stats	==> Display a live stream of container(s) resource usage statistics
+docker top container-id or name	==> Display the running processes of a container
+
+docker inspect
+docker inspect is a command that low-level information on Docker objects like docker images, containers, networks, volumes, etc. By default, docker inspect will return results in a JSON array
+docker docker_object inspect [OPTIONS] NAME|ID [NAME|ID...]
+
+docker Volumes: are the preferred mechanism for persisting data generated and used by Docker containers.
+docker volume create irfan_volume
+docker volume ls
+docker volume inspect ca808e6fd82590dd0858f8f2486d3fa5bdf7523ac61d525319742e892ef56f59(irfan_volume)
+docker volume rm irfan_volume
+default mountPoint is /var/lib/docker/volumes/
+ --mount is more verbose option to create docker volumes. we can give source,destination and permissions while creating volumes.
+docker run -d --mount source=irfan_volume,target=/app nginx:latest
+
+Docker Networking:
+Networking allows containers to communicate with each other and with the host system. Containers run isolated from the host system and need a way to communicate with each other and with the host system.
+
+Bridge Networking: is default network mode in Docker. It creates a private network between the host and containers, allowing containers to communicate with each other and with the host system
+
+If you want to secure your containers and isolate them from the default bridge network you can also create your own bridge network.
+	docker network create -d bridge my_bridge
+	docker network ls
+This new network can be attached to the containers, when you run these containers.
+	docker run -d --net=my_bridge --name db training/postgres
+These containers are completely isolated with their private networks and cannot talk to each other.
+
+Host Networking:
+This mode allows containers to share the host system's network stack, providing direct access to the host system's network.
+Overlay Networking:
+This mode enables communication between containers across multiple Docker host machines, allowing containers to be connected to a single network even when they are running on different hosts
+
+Dockerfile
+FROM nginx
+COPY index.html /usr/share/nginx/html
+
+docker build -t irfansyed11/mynginx_image1:v1 .
+docker run --name mynginx1 -p 80:80 -d irfansyed11/mynginx_image1:v1
+docker images
+docker tag irfansyed11/mynginx_image1:v1 stacksimplify/mynginx_image1:v1-release
+docker push irfansyed11/mynginx_image1:v1-release
+
+Process of Creating Docker Images From Containers:
+1)Create a container from an existing image: The first step is to choose a base image you want to customize and run it as a container.
+2)Make changes to the container: Once you have the container up and running, you make changes to it. You could modify files, install additional software or do whatever you need to meet your requirements.
+3)Commit the changes to create a new image: After you’ve made the desired changes to the container, the next step is to commit those changes to create a brand-new Docker image.
+example:
+docker container run -d --name mynginx nginx
+docker exec -it mynginx /bin/bash
+	exit from the session by pressing CTRL + D or typing exit and then pressing Enter
+docker container commit -a "KodeKloud" -m "Changed default NGINX welcome message" mynginx nginx-kodekloud (or) docker commit container_id imagename
+docker commit = docker container commit 
+
+Replace your docker hub account Id
+docker tag <your-docker-hub-id>/mynginx_image1:v1 <your-docker-hub-id>/mynginx_image1:v1-release
+docker push <your-docker-hub-id>/mynginx_image1:v1-release
+
+
+
+Docker prune is used to clean up containers,images,volumes,networks:
+Docker container prune
+Docker network prune
+Docker volume prune
+Docker image prune ---) removes dangling images     ( -a removes all unused images)
+
+Docker system prune--) removes stopped container, unused network, dangling images,build cache
+ Bydefault volumes are not removed
+To remove volumes add --volumes
+Byadding --all   all images without atleast 1 cont will be deleted
+Dangling image:$ docker rmi $(docker images --filter "dangling=true" -q)
+
+
+
+Docker swarm 
+   Docker swarm is a group of machines that are running docker and joined into cluster.
+
+$ docker create --name my-nginx \
+  --network my-net \
+  --publish 8080:80 \
+  nginx:latest
+
+$ docker network connect my-net my-nginx
+docker network disconnect my-net my-nginx
+Port forwarding to outside world
+$ sysctl net.ipv4.conf.all.forwarding=1
+$ sudo iptables -P FORWARD ACCEPT
+
+************************************Dockerfile************************************
+ADD   url,extract compressed,copy
+COPY can only copy
+
+ENTRYPOINT is the process that's executed inside the container. CMD is the default set of arguments that are supplied to the ENTRYPOINT process.
+the default arguments provided by CMD can get overridden, whereas those provided by ENTRYPOINT cannot.
+
+With multi-stage builds, a Docker build uses one base image for compilation, packaging, and unit tests and then a separate image for the application runtime. As a result, the final image is smaller in size since it doesn't contain any development or debugging tools.
+With multi-stage builds, you use multiple FROM statements in your Dockerfile. Each FROM instruction can use a different base, and each of them begins a new stage of the build. You can selectively copy artifacts from one stage to another, leaving behind everything you don't want in the final image.
+
+Distroless images:
+Distroless images are a type of container image that is designed to be minimal. they typically contain only essential software required to run an application. Unlike traditional images based on Debian or Ubuntu — which include package managers, utilities, and shells. 
+Enhanced Security: By stripping down to the bare minimum, Distroless images reduce the attack surface, leaving fewer openings for potential threats. The absence of a shell, in particular, means that even if an attacker breaches the container, their capacity to inflict damage or escalate privileges is severely limited.
+
+###########################################
+# BASE IMAGE
+###########################################
+
+FROM ubuntu AS build
+RUN apt-get update && apt-get install -y golang-go
+ENV GO111MODULE=off
+COPY . .
+RUN CGO_ENABLED=0 go build -o /app .
+
+############################################
+# HERE STARTS THE MAGIC OF MULTI STAGE BUILD
+############################################
+
+FROM scratch
+
+# Copy the compiled binary from the build stage
+COPY --from=build /app /app
+
+# Set the entrypoint for the container to run the binary
+ENTRYPOINT ["/app"]
