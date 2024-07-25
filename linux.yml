@@ -130,8 +130,9 @@ du -sh <fileName/dirName> - displays the total size of the file/directory.
 nproc is a simple Unix command which is used to print the number of processing units available in the system or to the current process.
 top --> The ` top` command provides a real-time view of the system's performance. It displays information about CPU usage, memory usage, running processes.
 
-ping <hostName> - tests the reachability & responsiveness of the remote host.
-dig <domainName> - shows DNS information of the domain.
+ping: <hostName> - tests the reachability & responsiveness of the remote host.
+dig: <domainName> - shows DNS information of the domain.
+telnet:
 wget <url>- used to retrieve/download files from the internet.
 curl - client URL.
 curl <url> - used to retrieve/download files from the internet.
@@ -145,7 +146,7 @@ $ sudo ufw allow (port)/tcp
 For example:
 $ sudo ufw allow 53/tcp
 
-ps - process status.
+ps - process status.:
 ps - shows the currently running process.
 ps -u <userName>- shows the process of the username
 ps -ef - shows all the processes of the system.
@@ -166,6 +167,54 @@ echo "new sample text" >> <fileName> - appends the contents to the file mentione
 stat <fileName/dirName> - shows detailed information about the file or directory.
 cron - system daemon for managing scheduled tasks.
 tree - tree representation of files and directories of a specific directory.
+
+special characters in linux:
+$0 = returns thename of the script
+$n = Command line arguements, n is a value from 1 -9
+$# - it returns the total number of arguments
+$? -  Return the exit status of the last command
+$$ - Returns the process id of the script
+$@ - Prints all the arguments
+shift - Numbr of srguments reduced each time as the shift command executes
+
+troubleshooting shellscripts:
+set -vx
+
+Basic Operators:
+1)Arithmetic operators:
+    ` this is called backtick (`)
+    syntax: `expr value1<operator>value2`
+ Operator	Name	Use	Example
++	Addition	It adds two operands	result= a+b
+–	Subtraction	It subtract second operand from first one	result= a-b
+*	Multiplication	Multiply two operands	result= a*b
+/	Division	Return the quotient after diving first operand from second operands	16/3 result = 5
+%	Modulo	Return remainder after dividing first operand from second operand	16/ 3 result = 1
++=	Increment by constant	Increment value of first operand with given constant value	x= 13 x+=3 result = 16
+-=	Decrement by constant	Decrement value of first operand with given constant value	 x= 13 x -= 3 result = 10
+*=	Multiply by constant	Multiply the given operand with the constant value	 x= 10 x*=3 result = 30
+/=	Divide by constant	Divide the operand with given constant value and return the quotient x = 31 x/=3 result = 10
+%=	Remainder by dividing with constant	Divide the operand with given constant value and return the remainder	x= 31 x%=3 result = 1
+**	Exponentiation	 The result is second operand raised to the power of first operand.	 3**2 result = 9
+2)Relational operators:
+
+3)
+
+Decession making:
+if statement
+if-else statement
+if..elif..else..fi statement (Else If ladder)
+if..then..else..if..then..fi..fi..(Nested if)
+switch statement
+Syntax:
+if [ expression ]
+then
+   statement1
+else
+   statement2
+fi
+
+======================================================================================
 
 The `awk` command in Linux is a powerful tool for text processing and pattern scanning. It is used for manipulating and analyzing text files, particularly structured text such as logs.
 

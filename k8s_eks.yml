@@ -1,4 +1,4 @@
-What is Kubernetes? Why organizations are using it?
+What is Kubernetes? Why organizations are using it?:
 Kubernetes is an open-source container orchestration engine for automating deployment, scaling and management of containerized applications.
 
 A kubernetes cluster consists of a set of worker machines called nodes that run containerized applications. The control plane manages the worker nodes and the pods in cluster.
@@ -84,16 +84,16 @@ What are some use cases for using Ingress?
 Multiple sub-domains (multiple host entries, each with its own service)
 One domain with multiple services (multiple paths where each one is mapped to a different service/application)
 
-Helm
-What is Helm?
+Helm:
+Helm is a tool that automates the creation, packaging, configuration, and deployment of Kubernetes applications by combining your configuration files into a single reusable package.
+Helm Charts help you define, install, and upgrade even the most complex Kubernetes application.
 
+Helm install resouces in a particular order Namespace > ServiceAccount > Secret > ConfigMap > PersistentVolume > Service > Deployment > Ingress.
 Package manager for Kubernetes. Basically the ability to package YAML files and distribute them to other users and apply them in the cluster(s).
 
 As a concept it's quite common and can be found in many platforms and services. Think for example on package managers in operating systems. If you use Fedora/RHEL that would be dnf. If you use Ubuntu then, apt. If you don't use Linux, then a different question should be asked and it's why? but that's another topic :)
 
 https://github.com/bregman-arie/devops-exercises/tree/master/topics/kubernetes#helm
-
-
 
 create a new chart with the given name
 helm create NAME [flags]
@@ -132,6 +132,11 @@ Below are different methods Kubernetes schedules specific Pods
 
 
 =====================****************************======================
+There are three popular options to run and deploy an EKS cluster:
+
+1) You can create the cluster from the AWS web interface: --> creating a cluster using the AWS interface is not recommended as there are plenty of configuration options and screens that you have to complete before you can use the cluster.
+2) You can use the eksctl command-line utility: eksctl and eksctl with yaml (eksctl create cluster -f cluster.yaml) file. You can also define eksctl clusters in YAML, but the tools has its limits. 
+3) You can define the cluster as using code with a tool such as Terraform: 
 
 https://github.com/stacksimplify/aws-eks-kubernetes-masterclass
 https://github.com/bregman-arie/devops-exercises/tree/master/topics/kubernetes#helm
@@ -193,25 +198,33 @@ kubectl rollout status deployment/my-deploy
 kubectl rollout history
 kubectl rollout undo
 
-Configure Applications
-Configuring applications comprises of understanding the following concepts:
-Configuring Command and Arguments on applications
-Configuring Environment Variables
-Configuring Secrets
 
-Define an environment variable for a container
+Define an environment variable for a container:
 To set environment variables, include the env or envFrom field in the configuration file
  --> env
 allows you to set environment variables for a container, specifying a value directly for each variable that you name.
 --> envFrom
 allows you to set environment variables for a container by referencing either a ConfigMap or a Secret.
 
+RBAC:
 “Role” will grant access to only one specific namespace, while a “ClusterRole” can be used in all namespaces in the cluster.
 If you want to define a role within a namespace, use a Role; if you want to define a role cluster-wide, use a ClusterRole.
-The role defines what actions (aka “verbs”) can be taken against what kinds of “resources.” The RoleBinding is what maps users to that role. 
+The role: defines what actions (aka “verbs”) can be taken against what kinds of “resources.” 
+role binding: grants the permissions defined in a role to a user or set of users. it basically maps users/ServiceAccount to that role.
 
-In the Kubernetes cluster, any processes or applications in the container which resides within the pod can access the cluster by getting authenticated by the API server, using a service account. A service account provides  a unique identity for system components and application pods.
-Every Kubernetes namespace contains at least one ServiceAccount: the default ServiceAccount for that namespace, named default
+ServiceAccount:
+A service account is a non-human account that provides a distinct identity in a Kubernetes cluster.
+Application Pods, system components, and entities inside and outside the cluster can use a specific ServiceAccount's credentials to identify as that ServiceAccount.
+A service account provides  a unique identity for system components and application pods.
+Every Kubernetes namespace contains at least one ServiceAccount- the default ServiceAccount for that namespace, named default
+
+Istio --> Service mest capabilities
+ArgoCD --> GitOps capabilities
+CRD(Custom Resource Definition): is a Kubernetes extension mechanism that allows users to create and manage custom resources.
+Custom resource definitions(CRDs): in Kubernetes are a way to extend its API, allowing us to add functionality and capabilities beyond the basic features provided out of the box.
+
+Custom Resource:
+Custom Controller:
 
 CRI (Container Runtime Interface) CNI (Cluster Network Interface) CSI (Container Storage Interface) 
 
@@ -224,12 +237,11 @@ A StorageClass provides a way for administrators to describe the classes of stor
 Each StorageClass contains the fields provisioner, parameters, and reclaimPolicy, which are used when a PersistentVolume belonging to the class needs to be dynamically provisioned to satisfy a PersistentVolumeClaim (PVC)
 Sidecar containers are the secondary containers that run along with the main application container within the same Pod. These containers are used to enhance or to extend the functionality of the primary app container by providing additional services, or functionality such as logging, monitoring, security, or data synchronization.
 
-Init containers are exactly like regular containers but they run before the app containers are started. 
+Init containers: are exactly like regular containers but they run before the app containers are started. 
  ->Init containers always run to completion.
  ->Each init container must complete successfully before the next one starts.
 
 Liveness, Readiness and Startup Probes
-
 Liveness: making sure healthy to restart
 The kubelet uses liveness probes to know when to restart a container.
    -- > For example, liveness probes could identify a deadlock situations, where an application is running, but unable to make progress. Restarting a container in such a state can help to make the application more available.
@@ -239,6 +251,207 @@ The kubelet uses readiness probes to know when a container is ready to start acc
 
 Startup: making sure container application has started
 The kubelet uses startup probes to know when a container application has started.This can be used to adopt liveness checks on slow starting containers, avoiding them getting killed by the kubelet before they are up and running.
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++EKS++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Amazon EKS is a managed Kubernetes services on AWS, designed to optimize containerized applications.
+UseCases:
+-->Deploying high-availability applications
+Using Elastic Load Balancing, you can make sure that your applications are highly available across multiple Availability Zones.
+-->Automating software release process
+Manage continuous integration and continuous deployment (CICD) pipelines that simplify the process of automated building, testing, and deployment of applications.
+-->Running serverless applications
+Use AWS Fargate with Amazon EKS to run serverless applications. This means you can focus solely on application development, while Amazon EKS and Fargate handle the underlying infrastructure.
+
+==>Control plane
+--Amazon EKS ensures every cluster has its own unique Kubernetes control plane.
+--The control plane positions at least two API server instances and three etcd instances across three AWS Availability Zones within an AWS Region.
+--If a control plane instance falters, Amazon EKS quickly replaces it, using different Availability Zone if needed.
+===>Worker nodes
+--Amazon EKS cluster has a set of worker machines called nodes.
+--As per our requirements, there are different compute options available for worker nodes.
+AWS Fargate:
+ Fargate is a serverless compute engine for containers
+ AWS automatically provisions, scales, and maintains the infrastructure.
+Managed node groups:
+ managed node groups automate the provisioning and lifecycle management of nodes (Amazon EC2 instances)
+ Every managed node is provisioned as part of an Amazon EC2 Auto Scaling group that's managed for you by Amazon EKS.
+ There are no additional costs to use Amazon EKS managed node groups, you only pay for the AWS resources you provision. These include Amazon EC2 instances, Amazon EBS volumes, Amazon EKS cluster hours, and any other AWS infrastructure.
+ AWS takes care of tasks like patching, updating, and scaling nodes.
+Self-managed nodes:
+ You are in charge of managing, scaling, and maintaining the nodes, giving you total control over the underlying infrastructure.
+ Each node group contains one or more nodes that are deployed in an Amazon EC2 Auto Scaling group.
+ 
+Karpenter:
+ Karpenter is a flexible, high-performance Kubernetes cluster autoscaler that helps improve application availability and cluster efficiency. Karpenter launches right-sized compute resources in response to changing application load. 
+
+
+Install AWS CLI
+Install kubectl CLI
+Install eksctl CLI
+
+# Create Cluster
+eksctl create cluster --name=eksdemo1 \
+                      --region=us-east-1 \
+                      --zones=us-east-1a,us-east-1b \
+                      --version="1.21" \
+                      --without-nodegroup
+
+eksctl get cluster
+eksctl utils associate-iam-oidc-provider \
+    --region us-east-1 \
+    --cluster eksdemo1 \
+    --approve
+# Create EKS NodeGroup in VPC Private Subnets
+eksctl create nodegroup --cluster=eksdemo1 \
+                        --region=us-east-1 \
+                        --name=eksdemo1-ng-private1 \
+                        --node-type=t3.medium \
+                        --nodes-min=2 \
+                        --nodes-max=4 \
+                        --node-volume-size=20 \
+                        --ssh-access \
+                        --ssh-public-key=kube-demo \
+                        --managed \
+                        --asg-access \
+                        --external-dns-access \
+                        --full-ecr-access \
+                        --appmesh-access \
+                        --alb-ingress-access \
+                        --node-private-networking       
+
+# List EKS clusters
+eksctl get cluster
+
+# List NodeGroups in a cluster
+eksctl get nodegroup --cluster=<clusterName>
+
+# List Nodes in current kubernetes cluster
+kubectl get nodes -o wide
+
+# Our kubectl context should be automatically changed to new cluster
+kubectl config view --minify
+
+eksctl get nodegroup --cluster=eksdemo1
+eksctl delete nodegroup --cluster=eksdemo1 --name=eksdemo1-ng-public1
+eksctl delete cluster eksdemo1
+
+==================================================
+EKS-Storage-with-EBS-ElasticBlockStore:
+AWS EBS CSI Driver
+----------------
+Install EBS CSI Driver
+IAM role attached to worker nodes should have permission to Create and Delete Snapshots,volumes
+If you use a custom KMS key for encryption on your Amazon EBS volumes, customize the IAM role as needed.
+
+# Deploy EBS CSI Driver
+kubectl apply -k "github.com/kubernetes-sigs/aws-ebs-csi-driver/deploy/kubernetes/overlays/stable/?ref=master"
+
+# Verify ebs-csi pods running
+kubectl get pods -n kube-system
+
+==================================================
+AWS Load Balancer Controller Install on AWS EKS:
+1. Create IAM Policy and make a note of Policy ARN:
+ --> Create IAM policy for the AWS Load Balancer Controller that allows it to make calls to AWS APIs on your behalf.
+ --> curl -o iam_policy_latest.json https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/main/docs/install/iam_policy.json
+ --> aws iam create-policy \
+    --policy-name AWSLoadBalancerControllerIAMPolicy \
+    --policy-document file://iam_policy_latest.json
+ --> Make a note of Policy ARN as we are going to use that in next step when creating IAM Role. Policy ARN  arn:aws:iam::180789647333:policy/AWSLoadBalancerControllerIAMPolicy
+
+2. Create an IAM role for the AWS LoadBalancer Controller and attach the role to the Kubernetes service account.:
+ --> for eksctl managed clusters
+		This command will create an AWS IAM role
+		This command also will create Kubernetes Service Account in k8s cluster
+		In addition, this command will bound IAM Role created and the Kubernetes service account created using Annotations of service account.
+eksctl create iamserviceaccount \
+  --cluster=eksdemo1 \
+  --namespace=kube-system \
+  --name=aws-load-balancer-controller \
+  --attach-policy-arn=arn:aws:iam::180789647333:policy/AWSLoadBalancerControllerIAMPolicy \
+  --override-existing-serviceaccounts \
+  --approve
+
+kubectl get sa -n kube-system
+kubectl describe sa aws-load-balancer-controller -n kube-system
+
+
+3. Install AWS Load Balancer Controller using HELM3 CLI:
+ --> 	# Add the eks-charts repository.
+	helm repo add eks https://aws.github.io/eks-charts
+
+	# Update your local repo to make sure that you have the most recent charts.
+	helm repo update
+
+	# Install the AWS Load Balancer Controller. 
+helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+  -n kube-system \
+  --set clusterName=eksdemo1 \
+  --set serviceAccount.create=false \
+  --set serviceAccount.name=aws-load-balancer-controller \
+  --set region=us-east-1 \
+  --set vpcId=vpc-0165a396e41e292a3 \
+  --set image.repository=602401143452.dkr.ecr.us-east-1.amazonaws.com/amazon/aws-load-balancer-controller
+
+4. Understand IngressClass Concept and create a default Ingress Class
+IngressClass:
+ if there are multiple Ingress Controllers are deployed on a cluster then IngressClass can be used to target one of Controllers.
+ Ingress resource can use the ingressClassName field to specify the Ingressclass they are associated with.
+
+--> In IngressClass, we can define annotations to use a Ingress Controller by default. when default Ingress Controller is defined then we dont need to use ingressClassName in Ingress resource.
+
+# Configure kubeconfig for kubectl
+eksctl get cluster # TO GET CLUSTER NAME
+aws eks --region us-east-1 update-kubeconfig --name eksdemo1
+
+Why Prometheus over other monitoring tools ?:
+Open-source: Prometheus is an open-source project that is free to use and has a large community of contributors. This means that you can benefit from ongoing development, bug fixes, and feature enhancements without paying for a commercial monitoring solution.
+Native Kubernetes support: Prometheus is designed to work seamlessly with Kubernetes, making it easy to deploy and integrate with your Kubernetes environment. It provides pre-configured Kubernetes dashboards and supports auto-discovery of Kubernetes services and pods.
+Powerful query language: Prometheus provides a powerful query language that allows you to easily retrieve and analyze metrics data. This allows you to create custom dashboards and alerts, and to troubleshoot issues more easily.
+Scalability: Prometheus is designed to be highly scalable, allowing you to monitor large and complex Kubernetes environments with ease. It supports multi-node architectures and can handle large volumes of data without significant performance degradation.
+Integrations: Prometheus integrates with a wide range of other tools and systems, including Grafana for visualization, Alertmanager for alerting, and Kubernetes API server for metadata discovery.
+
+What is Grafana ?:
+Grafana is a popular open-source data visualization and analytics platform that allows you to create custom dashboards and visualizations based on a variety of data sources. Grafana is often used for monitoring and analyzing metrics and logs in real-time, making it an ideal tool for monitoring systems and applications, including Kubernetes environments.
+Grafana supports a wide range of data sources, including databases, time-series databases, and other data storage systems. It provides a powerful query language that allows you to retrieve and analyze data from these sources, and to create custom dashboards and alerts based on that data.
+In addition to its powerful data visualization and analysis capabilities, Grafana is also highly extensible. It supports a wide range of plugins and integrations, including integrations with popular monitoring and logging tools like Prometheus, Elasticsearch, and InfluxDB.
+
+Prometheus Install using Helm:
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install prometheus prometheus-community/prometheus
+	This is required to access prometheus-server using your browser.
+	kubectl expose service prometheus-server --type=NodePort --target-port=9090 --name=prometheus-server-ext
+KubeAPi will expose few metrics for monitoring.
+For monitoring our more metrics  like our apps,pods and replicasets we can use kubestate metrics of prometheus.
+for more additional metrics we can run promql queries
+
+Kube-promotheus-stack: --> prometheus operator installed using HELM3
+ customrules
+ 
+Statefullset apps
+ JEnkins
+ Graphana
+ kafka
+ Memcache
+ redis
+ 
+ 3 EKS clusters in each account
+ each cluster has 3 managed node groups
+ 120 deployments and 16 statefulsets
+ total 650 - 700 pods running in each cluster.
+
+
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+helm install grafana grafana/grafana
+	Expose Grafana Service
+	kubectl expose service grafana --type=NodePort --target-port=3000 --name=grafana-ext
+
+Grafana is just dashboard, its needs some data source to showcase so  go to data sources and add promotheus url.
+In grafana dashboard import dashboards uisng promql queries.
+import 3226 dashboard 
++++++++++++++++++++++++++++++++++++++++++++++++++++EKS+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 The Amazon Elastic Block Store Container Storage Interface (EBS CSI) Driver provides a CSI interface used by Container Orchestrators(K8s) to manage the lifecycle of Amazon EBS volumes.
 --> Automatically create EBS volumes and associated PersistentVolumes (PV) from PersistentVolumeClaims) (PVC). Parameters can be passed via a StorageClass for fine-grained control over volume

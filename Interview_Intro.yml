@@ -1,0 +1,38 @@
+Thank you for having me. I'm Irfan, and I have 5 years of experience with DevOps and AWS cloud.
+I started my career as a  DevOps Engineer in Idexcel Technologies. Here, I was working on project called Cync Software, a banking application
+I've had the opportunity to setup and manage AWS CodePipeline,developed Ansible scripts for deployments and worked on automation with shell scripts.
+which helped me to leverage my skills on CI/CD,Ansible and Terraform.
+
+Then I switched to Ltimindtree.Here, I worked on multiple projects in last 3 years.
+#1)ShakeShack. It is a fastfood restaurant chain in America. All ShakeShack applicantions are serverless applicantions running on AWS Lambda. In this project I got good understanding of how serverless applications works on AWS by integrating API Gateway,Lambda and DynamoDB.
+My current project is Zoll medical. As DevOps team we support multiple development teams some of them are Zoll online, EMS charts, ITAH.
+most applications are JAVA applications and we support them by creating CICD pipelines, Creating resources using Terraform and managing configurations using Ansible, Deploying applicantions to eks cluster using CICD pipelines and Monitoring of AWS resources and apps with Cloudwatch.
+
+In dev env, we have complete CI/CD setup starting from GitHub to deploying in AWS EKS clusters. 
+As soon as PR is merged into main branch it will trigger Jenkins job using webhooks. Jenkins job will execute steps mentioned in Jenkinsfile.
+steps mentioned in jenkinsfile are
+		first step in jenkinsfile is to run this job in jenkins agent which is a server which has docker installed
+		To setup java env we run a docker container and build application inside container.
+		Code quality testing with Sonarqube.
+		Building docker image and pushing to ECR registry  Snyk,trivy
+		Deploying to eks using terraform
+		
+Streamline Your Terraform Workflow with Atlantis
+I've been working with Atlantis for our GitHub-based PR workflow for more than a year, and it's been fantastic. Here are a few benefits:
+
+- Track and Review:
+- Every pull request and change generates a Terraform plan, allowing reviewers to verify additions, modifications, or deletions of terraform resources.
+
+- Automate with Ease:
+  - To generate a plan, comment: `atlantis plan`
+  - To apply changes, comment: `atlantis apply`
+  - After a successful apply, merge the branch to your main/master branch.
+  
+I have developed bash script to Automate QA testing and share generated reports with shell script.:
+	What Automation Script will do?:
+	1)Synchronize project code before every execution. 
+	2)execute maven command for generating reports (html file and failure screenshots). 
+	3)Compress reports into a zip file. 
+	4)Upload this zip file into S3 bucket in respective project path. 
+	5)delete reports in server.
+	6)Share that zip file from S3 bucket to QA team as a URL in SNS notification by using S3 presign URL.
