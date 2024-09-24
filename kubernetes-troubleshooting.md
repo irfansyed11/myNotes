@@ -1,4 +1,4 @@
-# ImagePullBackoff
+# 01-ImagePullBackoff
 
 When a kubelet starts creating containers for a Pod using a container runtime, it might be possible the container is in Waiting state because of ImagePullBackOff.
 
@@ -11,7 +11,7 @@ The BackOff part indicates that Kubernetes will keep trying to pull the image, w
 
 Kubernetes raises the delay between each attempt until it reaches a compiled-in limit, which is 300 seconds (5 minutes).
 
-# CrashLoopBackOff
+# 02-CrashLoopBackOff
 
 When you see "CrashLoopBackOff," it means that kubelet is trying to run the container, but it keeps failing and crashing. After crashing, Kubernetes tries to restart the container automatically, but if the container keeps failing repeatedly, you end up in a loop of crashes and restarts, thus the term "CrashLoopBackOff." 
 
@@ -41,7 +41,7 @@ Containers might be configured to start with specific command-line arguments. If
 
 Bugs in the application code, such as unhandled exceptions or segmentation faults, can cause the application to crash. For instance, if the application tries to access a null pointer or fails to catch and handle an exception correctly, it might terminate unexpectedly. Kubernetes, detecting the crash, will restart the container, but if the bug is triggered each time the application runs, this leads to a repetitive crash loop.
 
-# pods-not-schedulable
+# 03-pods-not-schedulable
 
 In Kubernetes, the scheduler is responsible for assigning pods to nodes in the cluster based on various criteria. Sometimes, you might encounter situations where pods are not being scheduled as expected. This can happen due to factors such as node constraints, pod requirements, or cluster configurations.
 
@@ -118,3 +118,6 @@ spec:
     value: ssd
     effect: NoSchedule
 ```
+# 04-statefulset-pv
+
+# 05-networkpolicy
