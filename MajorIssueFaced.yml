@@ -1,0 +1,5 @@
+EKS Addon Upgrade failure - Case 176065937400698:
+“EKS made a change in the eksauth client in the pod identity agent. It overrode the default Go HTTP transport [1], which is causing environment variables for proxy configuration to be ignored. EKS is prioritizing the fix which will be released in November.
+--
+[1]: https://github.com/aws/aws-sdk-go-v2/blob/main/aws/transport/http/client.go#L184”
+
