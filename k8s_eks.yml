@@ -472,3 +472,39 @@ kubectl get events --sort-by=.metadata.creationTimestamp
 # List all warning events
 kubectl events --types=Warning
 
++++++++++++++++++++++++++++++++++++++++++++++++++++Ingress and Gateway API ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+What is Ingress?
+"Ingress exposes HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the Ingress resource."
+
+What is Ingress Controller?
+An implementation for Ingress. It's basically another pod (or set of pods) that does evaluates and processes Ingress rules and this it manages all the redirections.
+There are multiple Ingress Controller implementations (the one from Kubernetes is Kubernetes Nginx Ingress Controller).
+
+What are some use cases for using Ingress?
+Multiple sub-domains (multiple host entries, each with its own service)
+One domain with multiple services (multiple paths where each one is mapped to a different service/application)
+IngressClass:
+ if there are multiple Ingress Controllers are deployed on a cluster then IngressClass can be used to target one of Controllers.
+ Ingress resource can use the ingressClassName field to specify the Ingressclass they are associated with.
+
+--> In IngressClass, we can define annotations to use a Ingress Controller by default. when default Ingress Controller is defined then we dont need to use ingressClassName in Ingress resource.
+
+***************Gateway API************
+Gateway Controller:
+A gateway controller is software that manages the infrastructure associated with routing traffic across contexts using Gateway API, analogous to the earlier ingress controller concept. Gateway controllers often, but not always, run in the cluster where they're managing infrastructure.
+East/West traffic: Traffic from workload to workload within a cluster.
+North/South traffic: Traffic from outside a cluster to inside a cluster (and vice versa).
+Service mesh:
+A service mesh is software that manages infrastructure providing security, reliability, and observability for communications between workloads (east/west traffic). Service meshes generally work by intercepting communications between workloads at a very low level, often (though not always) by inserting proxies next to the workload's Pods.
+
+There are 3 primary roles in Gateway API:
+Ian (he/him): Infrastructure Provider
+Chihiro (they/them): Cluster Operator
+Ana (she/her): Application Developer
+
+There are three main types of objects in our resource model:
+GatewayClass: GatewayClass defines a set of gateways with a common configuration and behavior. There must be at least one GatewayClass defined in order to be able to have functional Gateways. A controller that implements Gateway API does so by providing an associated GatewayClass resource that the user can reference from their Gateway(s).
+ --> This is similar to IngressClass for Ingress and StorageClass for PersistentVolumes. 
+Gateway: Gateway requests a point where traffic can be translated to Services within the cluster. It defines a request for a way to translate traffic from somewhere that does not know about Kubernetes to somewhere that does. For example, traffic sent to a Kubernetes Service by a cloud load balancer. A Gateway may be attached to one or more Route references which serve to direct traffic for a subset of traffic to a specific service.
+Routes: Routes describe how traffic coming via the Gateway maps to the Services.
+
