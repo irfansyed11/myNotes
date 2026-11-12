@@ -90,7 +90,7 @@ systemctl daemon-reload
 
 systemctl restart kubelet
 
-
-
+k patch sc local-storage -p '{"metadata":{"annotations":{"storageclass.kubernete
+s.io/is-default-class": "true"}}}'
 
 
