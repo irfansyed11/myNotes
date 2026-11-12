@@ -1,0 +1,96 @@
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Tips:
+CKA syllabus:
+1. Troubleshooting                          (30%)
+2. Cluster Architecture & Configuration     (25%)
+3. Services & Networking                    (20%)
+4. Workloads & Scheduling                   (15%)
+5. Storage                                  (10%)
+
+kubectl: get comfortable with kubectl commands.
+context: exam will have multiple clusters and namespaces so it is must to expertise kubectl context commands.
+alias: setup alias for kubectl. alias k=kubectl.
+kubernetes documentaion: It is important to be familiar documentaion for easy search.
+copy&paste: always copy&paste instead of typing.
+linux commands: like grep,pipe,filter,vim to work on logs,files,outputs.
+vim expertise: in either vim or nano. a 
+vim: commands like :set paste
+resource defination: avaoid writing resource defination files by using kubectl run,kubectl expose, kubectl expose. if it is required to write a defination then go to kubernetes documentaion and copy,paste,edit.
+kubernetes api reference docs: switch to latest k8s verison
+kubernetes sigs: familiarize yourself with Kubernetes Special Interest Groups (SIGs) for in-depth knowledge and best practices.
+kubectl top pods: use this command to monitor resource usage of pods in real-time.
+kubectl get events: use this command to view events in the cluster for troubleshooting.
+kubectl top nodes: use this command to monitor resource usage of nodes in real-time.
+
+for top commands to work kubectl must be able to access the metrics server and the metrics server must be properly configured in the cluster.
+for HPA (Horizontal Pod Autoscaler) and VPA (Vertical Pod Autoscaler) to work, the metrics server is also required.
+in HPA, there is a stabilization window that prevents the HPA from scaling the number of pods down too quickly. default is 5 minutes.
+in VPA, there are 3 types of update modes: Off, Auto, and Initial. Off means VPA will not make any changes to the pods but provides recommendations.. Auto means VPA will automatically update the pods based on recommendations. Initial means VPA will only update the pods when they are first created.
+gateway API: The Gateway API is a set of resources that extend Kubernetes' networking capabilities, providing more expressive ways to configure ingress traffic.
+
+Imperative Commands with Kubectl:
+POD:
+kubectl run nginx --image=nginx
+
+Generate POD Manifest YAML file (-o yaml). Don't create it(--dry-run)
+kubectl run nginx --image=nginx --dry-run=client -o yaml
+Deployment:
+kubectl create deployment --image=nginx nginx
+kubectl create deployment --image=nginx nginx --dry-run=client -o yaml
+--> Generate Deployment with 4 Replicas
+kubectl create deployment nginx --image=nginx --replicas=4
+--> You can also scale a deployment using the kubectl scale command.
+kubectl scale deployment nginx --replicas=4
+Another way to do this is to save the YAML definition to a file and modify
+kubectl create deployment nginx --image=nginx --dry-run=client -o yaml > nginx-deployment.yaml
+
+Service:
+Create a Service named redis-service of type ClusterIP to expose pod redis on port 6379
+
+kubectl expose pod redis --port=6379 --name redis-service --dry-run=client -o yaml
+(This will automatically use the pod's labels as selectors)
+Or
+kubectl create service clusterip redis --tcp=6379:6379 --dry-run=client -o yaml (This will not use the pods labels as selectors, instead it will assume selectors as app=redis. You cannot pass in selectors as an option. So it does not work very well if your pod has a different label set. So generate the file and modify the selectors before creating the service)
+
+Create a Service named nginx of type NodePort to expose pod nginx's port 80 on port 30080 on the nodes:
+kubectl expose pod nginx --port=80 --name nginx --type=NodePort --dry-run=client -o yaml
+
+(This will automatically use the pod's labels as selectors, but you cannot specify the node port. You have to generate a definition file and then add the node port in manually before creating the service with the pod.)
+Or
+kubectl create service nodeport nginx --tcp=80:80 --node-port=30080 --dry-run=client -o yaml
+(This will not use the pods labels as selectors)
+
+
+kubelet Configuration:
+cat /var/lib/kubelet/config.yaml
+
+cat /var/lib/kubelet/config.yaml | grep containerRuntimeEndpoint
+cat /var/lib/kubelet/config.yaml | grep staticPodPath
+
+What is the path configured with all binaries of CNI supported plugins?: /opt/cni/bin
+What is the CNI plugin configured to be used on this kubernetes cluster?: ls /etc/cni/net.d/
+
+
+upgrade:
+vim /etc/apt/sources.list.d/kubernetes.list
+Update the version in the URL to the next available minor release, i.e v1.35.
+deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.35/deb/ /
+
+
+apt update
+
+apt-cache madison kubeadm
+
+apt-get install kubeadm=1.35.0-1.1
+
+# Upgrade the node 
+kubeadm upgrade node
+apt-get install kubelet=1.35.0-1.1
+systemctl daemon-reload
+
+systemctl restart kubelet
+
+
+
+
+
